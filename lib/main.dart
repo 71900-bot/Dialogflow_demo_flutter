@@ -1,4 +1,6 @@
+import 'package:dialogflow_demo_flutter/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dialogflow/dialogflow_v2.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: HomeScreen(),
     );
   }
 }
@@ -28,15 +30,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 3), () async {
+      // await fetchDataFromDialogflow();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-          child: Container(
-        color: Colors.blueGrey,
-      )),
-    );
+    return Container();
+  }
+
+  Future fetchDataFromDialogflow() async {
+    AuthGoogle authGoogle =
+        await AuthGoogle(fileJson: "assets/creds.json").build();
+    Dialogflow dialogflow =
+        Dialogflow(authGoogle: authGoogle, language: Language.english);
+    AIResponse response = await dialogflow.detectIntent("Hi");
+    print(response.getMessage());
   }
 }
