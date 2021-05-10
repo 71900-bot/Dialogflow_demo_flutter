@@ -10,52 +10,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   Dialogflow dialogflow;
   AuthGoogle authGoogle;
-  List<ChatMessage> messages = [
-    ChatMessage(messageContent: "Hello, Will", messageType: "receiver"),
-    ChatMessage(messageContent: "How have you been?", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ChatMessage(
-        messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing hello?", messageType: "sender"),
-  ];
+  List<ChatMessage> messages = [];
+  TextEditingController _inputMessageController = new TextEditingController();
 
   ScrollController _scrollController = new ScrollController(
     initialScrollOffset: 0.0,
@@ -65,9 +21,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 300), () {
-      // initiateDialogFlow();
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    Future.delayed(Duration(milliseconds: 300), () async {
+      await initiateDialogFlow();
+    });
+  }
+
+  _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
     });
   }
 
@@ -130,51 +93,61 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Center(
           child: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: BouncingScrollPhysics(),
-                child: ListView.builder(
-                    itemCount: messages.length,
-                    shrinkWrap: true,
-                    padding: EdgeInsets.only(top: 10, bottom: 10),
-                    physics: NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return Container(
-                        padding: EdgeInsets.only(
-                            left: 14, right: 14, top: 10, bottom: 10),
-                        child: Align(
-                          alignment: (messages[index].messageType == "receiver"
-                              ? Alignment.topLeft
-                              : Alignment.topRight),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: (messages[index].messageType == "receiver"
-                                  ? Colors.grey.shade200
-                                  : Colors.blue[200]),
-                            ),
-                            padding: EdgeInsets.all(16),
-                            child: Text(
-                              messages[index].messageContent,
-                              style: TextStyle(fontSize: 15),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: BouncingScrollPhysics(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ListView.builder(
+                          itemCount: messages.length,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.only(top: 10, bottom: 10),
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            return Container(
+                              padding: EdgeInsets.only(
+                                  left: 14, right: 14, top: 10, bottom: 10),
+                              child: Align(
+                                alignment:
+                                    (messages[index].messageType == "receiver"
+                                        ? Alignment.topLeft
+                                        : Alignment.topRight),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: (messages[index].messageType ==
+                                            "receiver"
+                                        ? Colors.grey.shade200
+                                        : Colors.blue[200]),
+                                  ),
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    messages[index].messageContent,
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            Container(
-              padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
-              height: 60,
-              width: double.infinity,
-              child: bottomChatView(),
-            )
-          ],
+              Container(
+                padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
+                height: 60,
+                width: double.infinity,
+                child: bottomChatView(),
+              )
+            ],
+          ),
         ),
       )),
     );
@@ -188,6 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         Expanded(
           child: TextField(
+            controller: _inputMessageController,
+            // onSubmitted: fetchFromDialogFlow(_inputMessageController.text),
             decoration: InputDecoration(
                 hintText: "Write message...",
                 hintStyle: TextStyle(color: Colors.black54),
@@ -198,7 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 15,
         ),
         FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            fetchFromDialogFlow(_inputMessageController.text);
+          },
           child: Icon(
             Icons.send,
             color: Colors.white,
@@ -215,21 +192,21 @@ class _HomeScreenState extends State<HomeScreen> {
     AuthGoogle authGoogle =
         await AuthGoogle(fileJson: "assets/creds.json").build();
     dialogflow = Dialogflow(authGoogle: authGoogle, language: Language.english);
-    messages = [
-      ChatMessage(messageContent: "Hello, Will", messageType: "receiver"),
-      ChatMessage(
-          messageContent: "How have you been?", messageType: "receiver"),
-      ChatMessage(
-          messageContent: "Hey Kriss, I am doing fine dude. wbu?",
-          messageType: "sender"),
-      ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-      ChatMessage(
-          messageContent: "Is there any thing wrong?", messageType: "sender"),
-    ];
   }
 
   fetchFromDialogFlow(String input) async {
+    _inputMessageController.clear();
+    setState(() {
+      messages.add(ChatMessage(messageContent: input, messageType: "sender"));
+    });
+    _scrollToBottom();
+
     AIResponse response = await dialogflow.detectIntent(input);
     print(response.getMessage());
+    messages.add(ChatMessage(
+        messageContent: response.getMessage(), messageType: "receiver"));
+    setState(() {
+      _scrollToBottom();
+    });
   }
 }
