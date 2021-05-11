@@ -1,5 +1,6 @@
 import 'package:dialogflow_demo_flutter/models/chat_message.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dialogflow/dialogflow_v2.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -7,17 +8,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<ChatMessage> mockMessages = [
-    ChatMessage(messageContent: "hai", messageType: "sender"),
-    ChatMessage(messageContent: "Hello", messageType: "receiver"),
-    ChatMessage(messageContent: "how are you", messageType: "sender"),
-    ChatMessage(messageContent: "I am fine. wbu?", messageType: "receiver"),
-    ChatMessage(messageContent: "I am good too", messageType: "sender"),
-    ChatMessage(
-        messageContent: "That is good to hear", messageType: "receiver"),
-  ];
+  List<ChatMessage> messages = [];
   TextEditingController _inputMessageController = new TextEditingController();
-
+  Dialogflow dialogflow;
+  AuthGoogle authGoogle;
   ScrollController _scrollController = new ScrollController(
     initialScrollOffset: 0.0,
     keepScrollOffset: true,
@@ -26,6 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    Future.delayed(Duration.zero, () async {
+      await initiateDialogFlow();
+    });
   }
 
   @override
@@ -103,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             ListView.builder(
-                itemCount: mockMessages.length,
+                itemCount: messages.length,
                 shrinkWrap: true,
                 padding: EdgeInsets.only(top: 10, bottom: 10),
                 physics: NeverScrollableScrollPhysics(),
@@ -112,19 +109,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: EdgeInsets.only(
                         left: 14, right: 14, top: 10, bottom: 10),
                     child: Align(
-                      alignment: (mockMessages[index].messageType == "receiver"
+                      alignment: (messages[index].messageType == "receiver"
                           ? Alignment.topLeft
                           : Alignment.topRight),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
-                          color: (mockMessages[index].messageType == "receiver"
+                          color: (messages[index].messageType == "receiver"
                               ? Colors.grey.shade200
                               : Colors.blue[200]),
                         ),
                         padding: EdgeInsets.all(16),
                         child: Text(
-                          mockMessages[index].messageContent,
+                          messages[index].messageContent,
                           style: TextStyle(fontSize: 15),
                         ),
                       ),
@@ -151,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: TextField(
               controller: _inputMessageController,
               onSubmitted: (String str) {
-                //call method to add string to list and update UI
+                fetchFromDialogFlow(str);
               },
               decoration: InputDecoration(
                   hintText: "Write message...",
@@ -164,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           FloatingActionButton(
             onPressed: () {
-              //call method to add string to list and update UI
+              fetchFromDialogFlow(_inputMessageController.text);
             },
             child: Icon(
               Icons.send,
@@ -185,5 +182,24 @@ class _HomeScreenState extends State<HomeScreen> {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
+  }
+
+  initiateDialogFlow() async {
+    AuthGoogle authGoogle =
+        await AuthGoogle(fileJson: "assets/creds.json").build();
+    dialogflow = Dialogflow(authGoogle: authGoogle, language: Language.english);
+  }
+
+  fetchFromDialogFlow(String input) async {
+    _inputMessageController.clear();
+    setState(() {
+      messages.add(ChatMessage(messageContent: input, messageType: "sender"));
+    });
+
+    AIResponse response = await dialogflow.detectIntent(input);
+    print(response.getMessage());
+    messages.add(ChatMessage(
+        messageContent: response.getMessage(), messageType: "receiver"));
+    setState(() {});
   }
 }
