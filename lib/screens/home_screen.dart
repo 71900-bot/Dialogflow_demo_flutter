@@ -1,6 +1,5 @@
 import 'package:dialogflow_demo_flutter/models/chat_message.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dialogflow/dialogflow_v2.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -8,9 +7,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Dialogflow dialogflow;
-  AuthGoogle authGoogle;
-  List<ChatMessage> messages = [];
   List<ChatMessage> mockMessages = [
     ChatMessage(messageContent: "hai", messageType: "sender"),
     ChatMessage(messageContent: "Hello", messageType: "receiver"),
@@ -30,17 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () async {
-      await initiateDialogFlow();
-    });
-  }
-
-  _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    });
   }
 
   @override
@@ -166,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: TextField(
               controller: _inputMessageController,
               onSubmitted: (String str) {
-                fetchFromDialogFlow(str);
+                //call method to add string to list and update UI
               },
               decoration: InputDecoration(
                   hintText: "Write message...",
@@ -179,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           FloatingActionButton(
             onPressed: () {
-              fetchFromDialogFlow(_inputMessageController.text);
+              //call method to add string to list and update UI
             },
             child: Icon(
               Icons.send,
@@ -194,25 +179,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  initiateDialogFlow() async {
-    AuthGoogle authGoogle =
-        await AuthGoogle(fileJson: "assets/creds.json").build();
-    dialogflow = Dialogflow(authGoogle: authGoogle, language: Language.english);
-  }
-
-  fetchFromDialogFlow(String input) async {
-    _inputMessageController.clear();
-    setState(() {
-      messages.add(ChatMessage(messageContent: input, messageType: "sender"));
-    });
-    _scrollToBottom();
-
-    AIResponse response = await dialogflow.detectIntent(input);
-    print(response.getMessage());
-    messages.add(ChatMessage(
-        messageContent: response.getMessage(), messageType: "receiver"));
-    setState(() {
-      _scrollToBottom();
+  _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
     });
   }
 }
